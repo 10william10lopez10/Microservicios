@@ -96,6 +96,32 @@ router.get("/AuthorCountry/:capital", async (req, res) => {
 });
 
 
+//Listar los paises donde se hable determinado idioma 
+router.get('/countries/:language', (req, res) => {
+  // Creamos un array vacío para almacenar los países que coinciden con el idioma especificado
+  let countriesMatched = [];
+  for (let countryCode in data.dataLibrary.countries) {
+    const currentCountry = data.dataLibrary.countries[countryCode];
+    if (currentCountry.languages.includes(req.params.language)) {
+      countriesMatched.push(currentCountry);
+    }
+  }
+
+  // Si no se encontraron países que coinciden con el idioma especificado
+  if (countriesMatched.length === 0) {
+    return res.status(404).send(`No se encontraron países que hablan ${req.params.language}`);
+  }
+
+  const response = {
+    service: 'countries',
+    architecture: 'microservices',
+    data: countriesMatched,
+  };
+
+  // Devolvemos la respuesta en formato JSON
+  return res.json(response); 
+});
+
 
 // Exportamos el router
 module.exports = router;
