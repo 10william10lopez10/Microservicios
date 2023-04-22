@@ -11,36 +11,141 @@ const directoryPath = path.join(__dirname, csvPath);
 console.log(directoryPath);
 const csvtojson = require('csvtojson');
 
-const tempArray = [];
+const LanguageArray = [];
 
 csvtojson({
     noheader: true,
     headers: ['code', 'languages']
-})
-.fromFile(directoryPath)
-.then((jsonObject) => {
+  })
+  .fromFile(directoryPath)
+  .then((jsonObject) => {
 
     for (let items in jsonObject) {
-        jsonObject[items]['languages'] = jsonObject[items]['languages'].split(";");
+      jsonObject[items]['languages'] = jsonObject[items]['languages'].split(";");
 
-        tempArray.push(jsonObject[items]);
+      LanguageArray.push(jsonObject[items]);
     }
-});
+  });
 
 // Creamos una función logger que muestra un mensaje en consola
 const logger = (message) => console.log(`Languages Service: ${message}`);
 
 router.get("/", (req, res) => {
+  const response = {
+    // crea una respuesta con información sobre los libros
+    service: "languages",
+    architecture: "microservices",
+    length: LanguageArray.length,
+    data: LanguageArray,
+  };
+  logger("Get lenguajes data"); // registra un mensaje en los registros
+  return res.json(response); // devuelve la respuesta al cliente
+});
+
+
+// segun el language listar los autores los paises dnde se habla ese idioma 
+//y los libros que se han distribuido en paises donde se habla ese lenguaje
+/*router.get("/Language/:languages", async (req, res) => {
+  let languages = null;
+  for (let language of Object.values(LanguageArray)) {
+    if (language.code == req.params.languages || language.language == req.params.languages) {
+      languages = language;
+      break;
+    }
+  }
+
+  // obtener los paises donde se distribuye los libros dependiendo del idioma
+  const languagesResponse = await fetch(`http://books:4000/api/v2/countries/countries/${languages.code}`);
+  const languagesData = await languagesResponse.json();
+  console.log(languagesData)
+  const countryData = [];
+  console.log(countryData)
+  for(let country of languagesData.data){
+    countryData.push(country.language);
+  }
+  
+  // obtener los títulos de libros que se han distribuido en el país buscado
+  const booksResponse = await fetch(`http://books:4000/api/v2/books/Idiom/${languages}`);
+  const booksData = await booksResponse.json();
+  const bookTitles = [];
+  for(let book of booksData.data){
+    bookTitles.push(book.title);
+  }
+
+
+  // crear la respuesta que se enviará al cliente
+  const response = {
+    service: "Autores, libros y pais por capital",
+    architecture: "microservicios",
+    authores: countryData.length,
+    autores: countryData,
+    books: bookTitles.length,
+    Titles: bookTitles,
+    data: languages
+  };
+  return res.send(response); // devuelve la respuesta al cliente
+});*/
+router.get("/Language/:languages", async (req, res) => {
+  let languages = null;
+  for (let language of Object.values(LanguageArray)) {
+    if (language.code == req.params.languages || language.language == req.params.languages) {
+      languages = language;
+      break;
+    }
+  }
+
+  if (!languages) {
+    return res.status(404).send("Idioma no encontrado");
+  }
+
+
+
+
+  try {
+    // obtener los países donde se habla ese idioma
+    let countriesResponse = await fetch(`http://countries:5000/api/v2/countries/countries/${languages.code}`);
+    const countriesData = await countriesResponse.json();
+    const countryNames = countriesData.data.map((country) => country.name);
+
+    const booksNames = [];
+    const authorNames = [];
+    for (let country of countryNames) {
+      const authorsResponse = await fetch(`http://authors:3000/api/v2/authors/CountryAuthor/${country}`);
+      const authorsData = await authorsResponse.json();
+      if (authorsData.data.length > 0) {
+        authorsData.data.map((author) => {
+          authorNames.push(author.author)
+        });
+      }
+      const booksResponse = await fetch(`http://books:4000/api/v2/books/Distributed/${country}`);
+      const booksData = await booksResponse.json();
+      if (booksData.data.length > 0) {
+        booksData.data.map((book) => {
+          booksNames.push(book.title)
+        });
+      }
+
+    }
+
+    // crear la respuesta que se enviará al cliente
     const response = {
-      // crea una respuesta con información sobre los libros
-      service: "languages",
-      architecture: "microservices",
-      length: tempArray.length,
-      data: tempArray,
+      service: "Autores, libros y país por idioma",
+      architecture: "microservicios",
+      autores: authorNames.length,
+      autores_nombres: authorNames,
+      books: booksNames.length,
+      books_títulos: booksNames,
+      países: countryNames.length,
+      países_nombres: countryNames,
+      idioma: languages
     };
-    logger("Get lenguajes data"); // registra un mensaje en los registros
-    return res.json(response); // devuelve la respuesta al cliente
-  });
+    return res.send(response); // devuelve la respuesta al cliente
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Error en el servidor");
+  }
+});
+
 
 // Exportamos el objeto Router
 module.exports = router;

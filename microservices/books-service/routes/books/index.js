@@ -165,15 +165,38 @@ router.get("/Distributed/:country", (req, res) => {
       countries.push(country);
     }
   }
-  if (countries.length == 0) {
-    return res.status(404).send("No se encontró el ningun país de distribucion");
-  }
+  
   // crea una respuesta con información sobre los paises donde se distribuye ese libro
   const response = {
     service: "books",
     architecture: "microservices",
     length: countries.length,
     data: countries,
+    
+  };
+  return res.send(response); // devuelve la respuesta al cliente
+});
+
+// define un controlador para la ruta "/title/:title"
+router.get("/Idiom/:language", (req, res) => {
+  let languages = [];
+  for (let language of data.dataLibrary.books) {
+     let contieneLanguage = language.languages.filter((language)=>{
+      return language == req.params.language
+    });
+    if(contieneLanguage.length > 0){
+      languages.push(language);
+    }
+  }
+  if (languages.length == 0) {
+    return res.status(404).send("Ningun libro se distribuye en paises donde se habla ese idioma");
+  }
+  // crea una respuesta con información sobre los paises donde se distribuye ese libro
+  const response = {
+    service: "books",
+    architecture: "microservices",
+    length: languages.length,
+    data: languages,
     
   };
   return res.send(response); // devuelve la respuesta al cliente
