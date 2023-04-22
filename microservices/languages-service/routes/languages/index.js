@@ -45,50 +45,11 @@ router.get("/", (req, res) => {
 
 // segun el language listar los autores los paises dnde se habla ese idioma 
 //y los libros que se han distribuido en paises donde se habla ese lenguaje
-/*router.get("/Language/:languages", async (req, res) => {
-  let languages = null;
-  for (let language of Object.values(LanguageArray)) {
-    if (language.code == req.params.languages || language.language == req.params.languages) {
-      languages = language;
-      break;
-    }
-  }
-
-  // obtener los paises donde se distribuye los libros dependiendo del idioma
-  const languagesResponse = await fetch(`http://books:4000/api/v2/countries/countries/${languages.code}`);
-  const languagesData = await languagesResponse.json();
-  console.log(languagesData)
-  const countryData = [];
-  console.log(countryData)
-  for(let country of languagesData.data){
-    countryData.push(country.language);
-  }
-  
-  // obtener los títulos de libros que se han distribuido en el país buscado
-  const booksResponse = await fetch(`http://books:4000/api/v2/books/Idiom/${languages}`);
-  const booksData = await booksResponse.json();
-  const bookTitles = [];
-  for(let book of booksData.data){
-    bookTitles.push(book.title);
-  }
-
-
-  // crear la respuesta que se enviará al cliente
-  const response = {
-    service: "Autores, libros y pais por capital",
-    architecture: "microservicios",
-    authores: countryData.length,
-    autores: countryData,
-    books: bookTitles.length,
-    Titles: bookTitles,
-    data: languages
-  };
-  return res.send(response); // devuelve la respuesta al cliente
-});*/
 router.get("/Language/:languages", async (req, res) => {
   let languages = null;
   for (let language of Object.values(LanguageArray)) {
-    if (language.code == req.params.languages || language.language == req.params.languages) {
+    if (language.code == req.params.languages || language.languages == req.params.languages) {
+      console.log(language)
       languages = language;
       break;
     }
